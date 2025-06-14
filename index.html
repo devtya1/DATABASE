@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - AI CID Database</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.3.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/live/3.1/firebase.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>   
+
+  <style>
+    @keyframes loadingAnimation {
+      0% { opacity: 0; }
+      50% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    body {
+      background-color: #000;
+      font-family: 'Orbitron', sans-serif;
+      color: #00ffee;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      padding: 1rem 0;
+      font-size: 2.5rem;
+      font-weight: bold;
+      text-align: center;
+      color: #00ffee;
+      text-shadow: 0 0 10px #00ffee, 0 0 20px #00ffee;
+      background-color: #000;
+      z-index: 1000;
+    }
+
+    .login-container {
+      background: #111;
+      padding: 3rem;
+      border-radius: 15px;
+      border: 2px solid #00ffee;
+      box-shadow: 0 0 25px #00ffee;
+      width: 350px;
+      margin-top: 6rem;
+    }
+
+    .login-container h2 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.6rem;
+      margin-bottom: 1.5rem;
+      background-color: #000;
+      border: 1px solid #00ffee;
+      color: #00ffee;
+      border-radius: 8px;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: #00ffee;
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #00cccc;
+    }
+
+    .error-message {
+      color: #ff0066;
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 9999;
+      color: #00ffee;
+      font-size: 1.5rem;
+      text-shadow: 0 0 10px #00ffee;
+      display: none;
+    }
+
+    .loading-dot {
+      animation: loadingAnimation 1.2s infinite;
+    }
+  </style>
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+  apiKey: "AIzaSyCfIyfq6IDCvgKoZtg2d7B-4-iFBMbxc-s",
+  authDomain: "test-database-for-all.firebaseapp.com",
+  databaseURL: "https://test-database-for-all-default-rtdb.firebaseio.com",
+  projectId: "test-database-for-all",
+  storageBucket: "test-database-for-all.firebasestorage.app",
+  messagingSenderId: "24401273232",
+  appId: "1:24401273232:web:06ff1f75311448641f1315"
+};
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let model, maxPredictions;
+
+    async function loadModel() {
+      const URL = "https://teachablemachine.withgoogle.com/models/on4W5P3O4/";
+      const modelURL = URL + "model.json";
+      const metadataURL = URL + "metadata.json";
+
+      if (!window.tmImage || !window.tmImage.load) {
+        console.error("tmImage not loaded properly.");
+        alert("Face recognition model failed to load. Try refreshing.");
+        return;
+      }
+
+      model = await window.tmImage.load(modelURL, metadataURL);
+      maxPredictions = model.getTotalClasses();
+    }
+
+    async function validateLogin(event) {
+      event.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      if (username === 'rag0728' && password === 'rag07281971') {
+        try {
+          await loadModel();
+
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          const video = document.createElement('video');
+          video.srcObject = stream;
+          await video.play();
+
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const context = canvas.getContext('2d');
+
+          await new Promise(resolve => setTimeout(resolve, 1500));
+
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imgData = canvas.toDataURL('image/png');
+
+          const prediction = await model.predict(canvas);
+          const rag0728Pred = prediction.find(p => p.className === 'rag0728');
+          const fakePred = prediction.find(p => p.className === 'fake');
+
+          console.log(`Confidence - rag0728: ${rag0728Pred?.probability}, fake: ${fakePred?.probability}`);
+
+          stream.getTracks().forEach(track => track.stop());
+
+          const logEntry = {
+            timestamp:  new Date(Date.now() + 5.5 * 60 * 60 * 1000).toISOString(),
+            image: imgData,
+            result: rag0728Pred && rag0728Pred.probability * 100 >= 97 ? 'Matched' : 'Rejected'
+          };
+
+          db.ref('logs').push(logEntry);
+
+          if (rag0728Pred && rag0728Pred.probability * 100 >= 97) {
+            localStorage.setItem('userSnapshot', imgData);
+            localStorage.setItem('database', 'true');
+            document.getElementById('loading-screen').style.display = 'flex';
+            setTimeout(() => {
+              window.location.href = 'database.html';
+            }, 3000);
+          } else {
+            alert('Face does not match!');
+          }
+        } catch (err) {
+          console.error('Error during verification:', err);
+          alert('Verification failed!');
+        }
+      } else {
+        document.getElementById('error-message').textContent = 'Invalid credentials. Access denied.';
+      }
+    }
+  </script>
+</head>
+<body>
+  <header>RESEARCH & ANALYSIS WING</header>
+  <div class="login-container">
+    <h2>Login</h2>
+    <form onsubmit="validateLogin(event)">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required>
+
+      <button type="submit">Enter Database</button>
+      <div id="error-message" class="error-message"></div>
+    </form>
+  </div>
+  <div id="loading-screen" class="loading-screen">
+    Initializing Access <span class="loading-dot">...</span>
+  </div>
+</body>
+</html>

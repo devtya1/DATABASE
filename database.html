@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RAW Database</title>
+  <style>
+     body {
+      margin: 0;
+      font-family: 'Orbitron', sans-serif;
+      background: radial-gradient(circle at center, #0d0d0d, #000000);
+      color: #00ffcc;
+      overflow-x: hidden;
+    }
+
+    header {
+      text-align: center;
+      padding: 2rem;
+      font-size: 2rem;
+      color: #00ffff;
+      text-shadow: 0 0 10px #00ffff;
+      border-bottom: 2px solid #00ffcc;
+      animation: fadeSlide 2s ease-in-out;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 2rem;
+      animation: slideIn 1.5s ease;
+    }
+
+    label, input, button, textarea {
+      display: block;
+      width: 100%;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+
+    input, textarea {
+      padding: 0.6rem;
+      background-color: #111;
+      color: #00ffcc;
+      border: 1px solid #00ffcc;
+      transition: box-shadow 0.3s ease;
+    }
+
+    input:focus, textarea:focus {
+      box-shadow: 0 0 10px #00ffcc;
+      outline: none;
+    }
+
+    button {
+      background: #00ffcc;
+      color: #000;
+      padding: 0.8rem;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      text-transform: uppercase;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    button:hover {
+      background: #00e6b8;
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #00e6b8;
+    }
+
+    .result-box {
+      background-color: #111;
+      border: 1px solid #00ffcc;
+      padding: 1rem;
+      margin-top: 1rem;
+      box-shadow: 0 0 20px #00ffcc44;
+      animation: fadeIn 0.8s ease-in-out;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .result-box:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0 25px #00ffcc;
+    }
+
+    .result-box h3 {
+      color: #00ffff;
+      border-bottom: 1px solid #00ffff;
+      padding-bottom: 0.5rem;
+    }
+
+    .result-box img {
+      max-width: 100%;
+      height: auto;
+      margin-top: 1rem;
+      border: 1px solid #00ffcc;
+      transition: transform 0.3s ease;
+    }
+
+    .result-box:hover img {
+      transform: scale(1.02);
+    }
+
+    #loading {
+      display: none;
+      text-align: center;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: #00ffcc;
+      animation: pulse 1s infinite;
+    }
+
+    #add-section {
+      display: none;
+      border-top: 2px solid #00ffcc;
+      padding-top: 2rem;
+      animation: fadeSlide 1s ease;
+    }
+
+    #results {
+      display: block;
+      animation: fadeSlide 1s ease;
+    }
+
+    .popup {
+      position: fixed;
+      top: 10vh;
+      left: 50vw;
+      transform: translate(-50%, -50%);
+      background: #111;
+      color: #00ffcc;
+      padding: 2rem;
+      border: 2px solid #00ffcc;
+      box-shadow: 0 0 30px #00ffcc;
+      z-index: 1000;
+      display: none;
+      max-width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: popupIn 0.5s ease forwards;
+    }
+
+    .popup h2 {
+      margin-top: 0;
+    }
+
+    .popup button {
+      margin-top: 1rem;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.5; }
+      50% { opacity: 1; }
+      100% { opacity: 0.5; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(100px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes popupIn {
+      from { opacity: 0; transform: scale(0.7); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Additional futuristic glowing borders and elements */
+    input, textarea, .result-box, .popup {
+      border-radius: 10px;
+    }
+
+    button {
+      border-radius: 30px;
+      box-shadow: 0 0 10px #00ffcc, 0 0 20px #00e6b8 inset;
+    }
+
+    .glow-animation {
+      animation: glowPulse 1.5s infinite alternate;
+    }
+
+    @keyframes glowPulse {
+      from {
+        box-shadow: 0 0 10px #00ffcc;
+      }
+      to {
+        box-shadow: 0 0 25px #00ffff;
+      }
+    }
+  </style>
+    <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/live/3.1/firebase.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>   
+</head>
+<body onload="load();">
+  <header>R&AW Database Terminal</header>
+  <div class="container">
+    <div id="search-section">
+      <h2>Suspect Details</h2>
+      <label for="filter-name">Name</label>
+      <input type="text" id="filter-name" placeholder="e.g. John Doe" />
+      <label for="filter-age">Age</label>
+      <input type="text" id="filter-age" placeholder="e.g. 25 or -" />
+      <label for="filter-height">Height</label>
+      <input type="text" id="filter-height" placeholder="e.g. 6ft or -" />
+      <label for="filter-weight">Weight</label>
+      <input type="text" id="filter-weight" placeholder="e.g. 70kg or -" />
+      <label for="filter-profession">Profession</label>
+      <input type="text" id="filter-profession" placeholder="e.g. Hacker or -" />
+
+      <button onclick="searchDatabase()">Search</button>
+      <button onclick="toggleAddSection()">Add a Suspect</button>
+      <div id="loading">Searching database...</div>
+      <div id="results"></div>
+    </div>
+
+    <div id="add-section">
+      <h2>Add Suspect Details</h2>
+      <label for="suspect-name">Name</label>
+      <input type="text" id="suspect-name" placeholder="Full Name" />
+      <label for="suspect-age">Age</label>
+      <input type="number" id="suspect-age" placeholder="Age" />
+      <label for="suspect-height">Height</label>
+      <input type="text" id="suspect-height" placeholder="e.g. 6ft" />
+      <label for="suspect-weight">Weight</label>
+      <input type="text" id="suspect-weight" placeholder="e.g. 70kg" />
+      <label for="suspect-unique">Unique Identifier (scar, tattoo, etc)</label>
+      <input type="text" id="suspect-unique" placeholder="e.g. scar on right cheek" />
+      <label for="suspect-image">Image URL</label>
+      <input type="text" id="suspect-image" placeholder="https://example.com/image.jpg" />
+      <label for="suspect-profession">Profession</label>
+      <input type="text" id="suspect-profession" placeholder="e.g. Hacker, Engineer, etc." />
+      <button onclick="addSuspect()">Submit Suspect</button>
+      <button onclick="cancelAddSection()">Cancel</button>
+    </div>
+  </div>
+
+  <div id="popup" class="popup"></div>
+
+  <script>
+    function load() {
+  const isLoggedIn = localStorage.getItem("database") === "true";
+  if (!isLoggedIn) {
+    window.location.replace("index.html");
+  }
+}
+
+    var login = false;
+    function speak(text) {
+    const synth = window.speechSynthesis;
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.pitch = 1.2;
+    utter.rate = 1;
+    utter.volume = 1;
+    utter.voice = synth.getVoices().find(voice => voice.name.includes('Google') || voice.default);
+    synth.speak(utter);
+  }
+
+  // Example: Speak when page loads
+  window.addEventListener('load', () => {
+    speak("Welcome! Database is now online.");
+  });
+    const firebaseConfig = {
+  apiKey: "AIzaSyCfIyfq6IDCvgKoZtg2d7B-4-iFBMbxc-s",
+  authDomain: "test-database-for-all.firebaseapp.com",
+  databaseURL: "https://test-database-for-all-default-rtdb.firebaseio.com",
+  projectId: "test-database-for-all",
+  storageBucket: "test-database-for-all.firebasestorage.app",
+  messagingSenderId: "24401273232",
+  appId: "1:24401273232:web:06ff1f75311448641f1315"
+};
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function searchDatabase() {
+  const name = document.getElementById('filter-name').value.trim().toLowerCase();
+  const ageInput = document.getElementById('filter-age').value.trim();
+  const heightInput = document.getElementById('filter-height').value.trim();
+  const weightInput = document.getElementById('filter-weight').value.trim();
+  const profession = document.getElementById('filter-profession').value.trim().toLowerCase();
+
+  const resultsDiv = document.getElementById('results');
+  const loadingDiv = document.getElementById('loading');
+
+  resultsDiv.innerHTML = "";
+  loadingDiv.style.display = 'block';
+
+  db.ref('suspects').once('value', snapshot => {
+    const data = snapshot.val();
+    const matches = [];
+
+    for (const key in data) {
+      const entry = data[key];
+      const infoLower = entry.info.toLowerCase();
+
+      let match = true;
+
+      function extractValue(label) {
+        const match = infoLower.match(new RegExp(`${label}\\s*:\\s*(\\d+\\.?\\d*)`, 'i'));
+        return match ? parseFloat(match[1]) : null;
+      }
+
+      function matchRange(input, value) {
+        if (!input || input === '-' || value === null) return true;
+        const range = input.match(/^(\d+\.?\d*)\s*-\s*(\d+\.?\d*)$/);
+        const exact = input.match(/^(\d+\.?\d*)$/);
+
+        if (range) {
+          const min = parseFloat(range[1]);
+          const max = parseFloat(range[2]);
+          return value >= min && value <= max;
+        } else if (exact) {
+          return value === parseFloat(exact[1]);
+        }
+        return false;
+      }
+
+      const ageVal = extractValue("age");
+      const heightVal = extractValue("height");
+      const weightVal = extractValue("weight");
+
+      if (name && name !== '-' && !entry.name.toLowerCase().includes(name)) match = false;
+      if (!matchRange(ageInput, ageVal)) match = false;
+      if (!matchRange(heightInput, heightVal)) match = false;
+      if (!matchRange(weightInput, weightVal)) match = false;
+      if (profession && profession !== '-' && !infoLower.includes(profession)) match = false;
+
+      if (match) matches.push(entry);
+    }
+
+    loadingDiv.style.display = 'none';
+    document.querySelectorAll('#search-section label, #search-section input, #search-section button').forEach(el => el.style.display = 'none');
+
+
+    if (matches.length === 0) {
+      resultsDiv.innerHTML = `
+        <div class="result-box">
+          <h3>No Match Found</h3>
+          <p>Try refining your description.</p>
+        </div>
+      `;
+      return;
+    }
+
+    matches.forEach(match => {
+      const box = document.createElement('div');
+      box.className = 'result-box';
+      box.innerHTML = `<h3>${match.name}</h3><p>${match.info}</p>`;
+      box.onclick = () => showPopup(match);
+      resultsDiv.appendChild(box);
+    });
+  });
+}
+
+    function toggleAddSection() {
+      document.getElementById('search-section').style.display = 'none';
+      document.getElementById('add-section').style.display = 'block';
+    }
+
+    function cancelAddSection() {
+      document.getElementById('add-section').style.display = 'none';
+      document.getElementById('search-section').style.display = 'block';
+    }
+
+    function addSuspect() {
+      const name = document.getElementById('suspect-name').value;
+      const age = document.getElementById('suspect-age').value;
+      const height = document.getElementById('suspect-height').value;
+      const weight = document.getElementById('suspect-weight').value;
+      const unique = document.getElementById('suspect-unique').value;
+      const image = document.getElementById('suspect-image').value;
+      const profession = document.getElementById('suspect-profession').value;
+
+      if (!name || !age || !height || !weight || !unique || !image || !profession) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      const info = `Age: ${age}, Height: ${height}, Weight: ${weight}, Profession: ${profession}. Identifier: ${unique}`;
+
+      db.ref('suspects').push({
+        name,
+        info,
+        imageUrl: image
+      }, () => {
+        alert("Suspect added successfully!");
+        cancelAddSection();
+      });
+    }
+
+    function showPopup(suspect) {
+      const popup = document.getElementById('popup');
+      popup.innerHTML = `<h2>${suspect.name}</h2><p>${suspect.info}</p><img src="${suspect.imageUrl}" style="width: 100%; max-width: 300px;" /><button onclick="closePopup()">Close</button>`;
+      popup.style.display = 'block';
+    }
+
+    function closePopup() {
+      document.getElementById('popup').style.display = 'none';
+    }
+
+    window.addEventListener('beforeunload', (e) => {
+  localStorage.setItem('database', 'false');
+});
+
+let mouseIdleTimer;
+  const MOUSE_IDLE_LIMIT = 20 * 1000; // 20 seconds
+
+  function startMouseIdleTimer() {
+    clearTimeout(mouseIdleTimer);
+    mouseIdleTimer = setTimeout(() => {
+      localStorage.setItem("database", "false");
+      alert("Logged out due to mouse inactivity.");
+      window.close(); // attempt to close tab (will work only if opened via JS)
+      window.location.replace("index.html"); // fallback redirect
+    }, MOUSE_IDLE_LIMIT);
+  }
+
+  // Reset timer on mouse movement
+  document.addEventListener('mousemove', startMouseIdleTimer);
+
+  // Start timer immediately
+  startMouseIdleTimer();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+</body>
+</html>
